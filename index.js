@@ -1,4 +1,4 @@
-var libxmljs = require("libxmljs"),
+var libxmljs = require('libxmljs'),
 defaults = {
   'xmlRootElement': 'document',
   'textField': '_text',
@@ -35,13 +35,13 @@ exports.xmlify = function (jsToConvert, options) {
           if( Object.prototype.toString.call( currentSubKey ) === '[object Array]' ) {
             // It's an array of tags
             for (var index in currentSubKey) {
-              if ( Object.prototype.toString.call( currentSubKey[index] ) === '[object Array]' || Object.prototype.toString.call( currentSubKey[index] ) === '[object String]') {
+              if ( Object.prototype.toString.call( currentSubKey[index] ) === '[object Object]') {
+                // Tags in an array
+                newData[subKey] = currentSubKey[index];
+              } else {
                 // Array or text in an array
                 newData[key] = {};
                 newData[key][options.arrayField] = currentSubKey[index];
-              } else {
-                // Tags in an array
-                newData[subKey] = currentSubKey[index];
               }
               buildNodes(newData, child.node(subKey));
             }
@@ -53,7 +53,7 @@ exports.xmlify = function (jsToConvert, options) {
         } else {
           // It's something we're going to turn into a string
           newData = currentSubKey.toString();
-          if (subKey === options.textField || subKey == options.cdataField || subKey == options.arrayField) {
+          if (subKey === options.textField || subKey === options.cdataField || subKey === options.arrayField) {
             child.text(newData);
           } else {
             attributes[subKey] = currentSubKey;
@@ -89,68 +89,13 @@ exports.xmlify = function (jsToConvert, options) {
   return outData.toString();
 };
 
-exports.old_jsonify = function (xmlToConvert, xmlRootElement, arrayEntities) {
-  var outData = {},
-  xmlData = libxmljs.parseXmlString(xmlToConvert),
-  readNodes = function (inData) {
-    var child = {};
-
-    // Add in the attributes
-    for (var attrIndex in inData.attrs()) {
-      child[inData.attrs()[attrIndex].name()] = inData.attrs()[attrIndex].value();
-    }
-
-    // Add in the text fields
-
-    // Add in the elements
-    for (var elIndex in inData.childNodes()) {
-      // Get the next node so we can work on it
-      var newNode = readNodes(inData.childNodes()[elIndex]);
-      // Make sure there's info in the node (xmlib will add blank text nodes)
-      if(typeof(newNode) === 'object') {
-        if (true){//(Object.keys(newNode).length > 0) {
-          // If we don't already have this node, treat it like text
-          if (inData.childNodes()[elIndex].name() === 'text') {
-            child = inData.childNodes();
-          } else {
-            if (!child[inData.childNodes()[elIndex].name()]) {
-              child[inData.childNodes()[elIndex].name()] = newNode;
-            } else {
-              // There are multiples of this node
-              // If we already have this node, make an array out of it
-              if( Object.prototype.toString.call( child[inData.childNodes()[elIndex].name()] ) !== '[object Array]' ) {
-                child[inData.childNodes()[elIndex].name()] = [child[inData.childNodes()[elIndex].name()]];
-              }
-              // Push the new node to the array
-              child[inData.childNodes()[elIndex].name()].push(newNode);
-            }
-          }
-        } else {
-          child = 'no children here';
-        }
-      } else {
-      }
-    }
-
-    return child;
-  };
-
-  outData[xmlData.root().name()] = readNodes(xmlData.root());
-
-  // If the user wants to 'unwrap' the data, this will do it
-  if (options.xmlRootElement) {outData = outData[options.xmlRootElement];}
-
-  return outData;
-};
-
 exports.jsonify = function (xmlToConvert, options) {
   var outData = {},
   xmlData = libxmljs.parseXmlString(xmlToConvert),
   readNodes = function (inData) {
     var child = {},
     currentNode,
-    currentAttribute,
-    subNode;
+    currentAttribute;
 
     for (var attrIndex in inData.attrs()) {
       currentAttribute = inData.attrs()[attrIndex];
