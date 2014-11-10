@@ -12,6 +12,6 @@
     "url": "https://github.com/jimmyrocks/xmljs_translator"
   },
   "dependencies": {
-    "libxmljs": "0.8.1"
+    "libxmljs": "0.12.0"
   }
 }
